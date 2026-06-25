@@ -1,0 +1,7 @@
+SHOWCASE FALLBACK — Tale Jewelry
+
+➜ Replace this file with: 7.png
+➜ Used in: Homepage 'Identity systems and digital products' gallery
+➜ Size: 800x1200 px (3:4 portrait)
+➜ Format: .png
+➜ Final location: /public/images/showcase/7.png
