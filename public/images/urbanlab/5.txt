@@ -1,0 +1,7 @@
+PRODUCT GALLERY — Urbanlab — Heritage Platform
+
+➜ Replace this file with: 5.png
+➜ Image #5 of 5
+➜ Size: 1600x900 px (16:9 landscape)
+➜ Format: .png
+➜ Final location: /public/images/urbanlab/5.png
