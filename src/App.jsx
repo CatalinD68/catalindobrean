@@ -30,6 +30,57 @@ const WhatsAppIcon = ({ size = 20, color = "currentColor" }) => (
   </svg>
 );
 
+// ─── Lazy Image — IntersectionObserver-based lazy loader ───
+// Renders a div with background-image only when scrolled near viewport
+// Use this for background-image styled containers (gives same visual result as <img loading="lazy">)
+function LazyImage({ src, alt = "", aspectRatio, style = {}, eager = false, className = "" }) {
+  const [loaded, setLoaded] = useState(false);
+  const [inView, setInView] = useState(eager);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (eager || inView) return;
+    const node = ref.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "300px" }  // start loading 300px before entering viewport
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [eager, inView]);
+
+  useEffect(() => {
+    if (!inView || !src) return;
+    const img = new window.Image();
+    img.onload = () => setLoaded(true);
+    img.src = src;
+  }, [inView, src]);
+
+  return (
+    <div
+      ref={ref}
+      role={alt ? "img" : undefined}
+      aria-label={alt}
+      className={className}
+      style={{
+        ...style,
+        aspectRatio: aspectRatio || style.aspectRatio,
+        background: loaded && src
+          ? `url(${src}) center/cover no-repeat, #1A1A1A`
+          : "linear-gradient(135deg, #1A1A1A 0%, #0B0B0B 100%)",
+        transition: "opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
+        opacity: loaded || !src ? 1 : 0.6,
+      }}
+    />
+  );
+}
+
 // ─── Logo Component ───
 const Logo = ({ color = "white" }) => (
   <svg width="136" height="37" viewBox="0 0 136 37" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -190,12 +241,12 @@ const portfolioProjects = {
       duration: "Apr 2021 – Dec 2025",
       location: "Romania – USA",
       tag: "SaaS",
-      image: "/images/covers/wesupply.png",
+      image: "/images/covers/wesupply.jpg",
       context: "WeSupply is a comprehensive post-purchase customer experience platform that helps e-commerce retailers drive sales and improve loyalty through real-time order tracking, proactive delivery notifications, self-service returns, and in-store pickup solutions.",
       problem: "The platform had grown significantly in features — tracking, returns, analytics, notifications — but the UX hadn't scaled accordingly. Retailers needed a clearer, more efficient interface to manage the entire post-purchase lifecycle.",
       solution: "Redesigned the end-to-end product experience over 4+ years, building a scalable design system, restructuring information architecture, and designing dashboard analytics that gave retailers actionable insights into their post-purchase operations.",
       approach: ["Research & UX Audit/Strategy", "Information & Flow Architecture", "Dashboard & Analytics Design", "Design System", "UI/UX for mobile & web", "AI Workflows — HTML to Design and Prototyping", "Multi-device Responsive Layouts", "Dev Team Collaboration"],
-      images: ["/images/wesupply/1.png", "/images/wesupply/2.png", "/images/wesupply/3.png", "/images/wesupply/4.png", "/images/wesupply/5.png"],
+      images: ["/images/wesupply/1.jpg", "/images/wesupply/2.jpg", "/images/wesupply/3.jpg", "/images/wesupply/4.jpg", "/images/wesupply/5.jpg"],
     },
     {
       id: "dreamtter",
@@ -205,12 +256,12 @@ const portfolioProjects = {
       duration: "Mar 2024 – May 2025",
       location: "Romania",
       tag: "Mobile",
-      image: "/images/covers/dreamtter.png",
+      image: "/images/covers/dreamtter.jpg",
       context: "Dreamtter is a mobile application developed by Redbee Software. The project required a complete UI/UX design process from user flow definition to visual direction and development handoff.",
       problem: "The app needed a cohesive visual identity and intuitive user flows that could handle complex edge cases while keeping the mobile experience simple and engaging for end users.",
       solution: "Designed the complete mobile app experience — from layout and user flows to visual direction and development handoff — integrating AI-assisted UX strategy to streamline the design process.",
       approach: ["Collaboration with Product Manager", "Design layout and user flows for the mobile app", "UI Design & Visual Direction", "Design iteration — different edge cases", "UX Strategy — AI process integration", "Handoff for Development"],
-      images: ["/images/dreamtter/1.png", "/images/dreamtter/2.png", "/images/dreamtter/3.png", "/images/dreamtter/4.png", "/images/dreamtter/5.png"],
+      images: ["/images/dreamtter/1.jpg", "/images/dreamtter/2.jpg", "/images/dreamtter/3.jpg", "/images/dreamtter/4.jpg", "/images/dreamtter/5.jpg"],
     },
     {
       id: "urbanlab",
@@ -220,12 +271,12 @@ const portfolioProjects = {
       duration: "Jan 2024 – Oct 2025",
       location: "Romania",
       tag: "Platform",
-      image: "/images/covers/urbanlab.png",
+      image: "/images/covers/urbanlab.jpg",
       context: "Urbanlab is a digital platform focused on built heritage mapping in the Jiu Valley region of Romania. The project combines community engagement with heritage preservation through interactive digital tools.",
       problem: "The Jiu Valley's architectural heritage lacked a digital presence. Communities needed a platform to document, map, and share built heritage in an accessible and engaging way.",
       solution: "Designed the complete product experience — from visual direction and interactive map UI/UX to website design and illustration systems — enabling community-driven heritage documentation.",
       approach: ["Product Visual Direction", "Map UI/UX Design", "Website Design", "UI & Website Illustrations Animation", "Product Design for Built Heritage Map — Jiu Valley", "Managing & Collaboration with Development Team", "Handoff for Development"],
-      images: ["/images/urbanlab/1.png", "/images/urbanlab/2.png", "/images/urbanlab/3.png", "/images/urbanlab/4.png", "/images/urbanlab/5.png"],
+      images: ["/images/urbanlab/1.jpg", "/images/urbanlab/2.jpg", "/images/urbanlab/3.jpg", "/images/urbanlab/4.jpg", "/images/urbanlab/5.jpg"],
     },
     {
       id: "geoint",
@@ -235,7 +286,7 @@ const portfolioProjects = {
       duration: "Jun 2025 – Aug 2025",
       location: "International",
       tag: "Dashboard",
-      image: "/images/covers/geoint.png",
+      image: "/images/covers/geoint.jpg",
       context: "FourthSpace is a geospatial intelligence product that visualizes complex location-based data for decision-makers. The platform needed responsive dashboard interfaces across desktop, tablet, and mobile.",
       problem: "Complex product management documentation needed to be translated into intuitive, data-rich interfaces that could render geospatial intelligence clearly across multiple device sizes.",
       solution: "Designed a geospatial intelligence dashboard using the Shadcn Design System as a foundation, delivering fast, responsive layouts that transform dense data into actionable visual insights.",
@@ -250,12 +301,12 @@ const portfolioProjects = {
       duration: "Nov 2022 – Jan 2023",
       location: "Romania",
       tag: "SaaS",
-      image: "/images/covers/refracto.png",
+      image: "/images/covers/refracto.jpg",
       context: "Refracto is a crypto-enabled real estate investment platform that democratizes property investment through tokenized ownership. The product needed a full UX strategy and dashboard design.",
       problem: "Real estate investment combined with cryptocurrency creates a complex user journey. Investors needed a clear, trustworthy dashboard that simplified portfolio management and investment flows.",
       solution: "Led MVP workshops to prioritize functionalities, designed the UX strategy and user journey mapping, and prototyped the investment dashboard for development handoff.",
       approach: ["MVP Workshops and Functionalities prioritization", "UX Design & Strategy", "User Journey Mapping", "Dashboard Prototyping"],
-      images: ["/images/refracto/1.png", "/images/refracto/2.png", "/images/refracto/3.png", "/images/refracto/4.png", "/images/refracto/5.png"],
+      images: ["/images/refracto/1.jpg", "/images/refracto/2.jpg", "/images/refracto/3.jpg", "/images/refracto/4.jpg", "/images/refracto/5.jpg"],
     },
     {
       id: "pan",
@@ -265,7 +316,7 @@ const portfolioProjects = {
       duration: "Oct 2020 – Jan 2026",
       location: "International",
       tag: "Start-up",
-      image: "/images/covers/pan.png",
+      image: "/images/covers/pan.jpg",
       context: "P.A.N (Protocol for Analyzing Nature) is a start-up platform designed for tracking and analyzing animal migration patterns. The project earned global recognition at both the NASA Space App Challenge and Microsoft Azure Hackathon.",
       problem: "Animal migration data is fragmented across research institutions. Scientists and conservationists needed a unified platform to visualize migration patterns and collaborate on wildlife protection efforts.",
       solution: "As Product Owner, led the full product lifecycle — from research and MVP definition to team management — building a platform that earned NASA Global Nominee status and Top 50 at Microsoft Azure Hackathon.",
@@ -281,8 +332,8 @@ const portfolioProjects = {
       role: "Product Designer",
       duration: "January 2025",
       tag: "Spatial",
-      image: "/images/personal/talejewelry/1.png",
-      gridImages: ["/images/personal/talejewelry/1.png", "/images/personal/talejewelry/2.png", "/images/personal/talejewelry/3.png", "/images/personal/talejewelry/4.png", "/images/personal/talejewelry/5.png", "/images/personal/talejewelry/6.png"],
+      image: "/images/personal/talejewelry/1.jpg",
+      gridImages: ["/images/personal/talejewelry/1.jpg", "/images/personal/talejewelry/2.jpg", "/images/personal/talejewelry/3.jpg", "/images/personal/talejewelry/4.jpg", "/images/personal/talejewelry/5.jpg", "/images/personal/talejewelry/6.jpg"],
       context: "Tale Jewelry is a conceptual augmented reality application that reimagines how customers browse and try on jewelry using spatial computing technology.",
       approach: ["Visual Direction", "Conceptual AR App Design", "Spatial Interface Design", "AI Workflows"],
     },
@@ -293,8 +344,8 @@ const portfolioProjects = {
       role: "Product Designer",
       duration: "January 2024",
       tag: "Spatial",
-      image: "/images/personal/visen/1.png",
-      gridImages: ["/images/personal/visen/1.png", "/images/personal/visen/2.png", "/images/personal/visen/3.png", "/images/personal/visen/4.png", "/images/personal/visen/5.png", "/images/personal/visen/6.png"],
+      image: "/images/personal/visen/1.jpg",
+      gridImages: ["/images/personal/visen/1.jpg", "/images/personal/visen/2.jpg", "/images/personal/visen/3.jpg", "/images/personal/visen/4.jpg", "/images/personal/visen/5.jpg", "/images/personal/visen/6.jpg"],
       context: "Visen is a conceptual VR/AR application that transforms the TV show viewing experience through spatial interfaces, 3D design, and immersive interactions.",
       approach: ["Visual Direction", "Conceptual VR/AR App Design", "Spatial Interface Design", "AI Workflows", "3D Interface Design"],
     },
@@ -310,19 +361,19 @@ const portfolioProjects = {
       problem: "A brand-new civic institution needed a visual identity that could represent the transformation from military discipline to creative freedom — balancing institutional trust with cultural openness for a diverse community audience.",
       solution: "Designed a brand identity system that bridges the project's military heritage (the unit number 01115) with the concept of a modern forum. The visual language communicates openness, dialogue, and cultural transformation.",
       approach: ["Client Briefing & Discovery Session", "Brand Strategy & Positioning", "Visual Direction & Concept Development", "Logo Design & Refinement", "Color Palette & Typography System", "Brand Presentation", "Print & Digital Application Testing", "Final Deliverables & Brand Guidelines"],
-      images: ["/images/branding/forum01115/1.png", "/images/branding/forum01115/2.png", "/images/branding/forum01115/3.png", "/images/branding/forum01115/4.png", "/images/branding/forum01115/5.png"],
+      images: ["/images/branding/forum01115/1.jpg", "/images/branding/forum01115/2.jpg", "/images/branding/forum01115/3.png", "/images/branding/forum01115/4.jpg", "/images/branding/forum01115/5.jpg"],
     },
     {
       id: "redbee", title: "Redbee Software",
       type: "Tech Company Brand Identity",
       role: "Brand Designer",
       tag: "Tech",
-      image: "/images/branding/redbee/cover.png",
+      image: "/images/branding/redbee/cover.jpg",
       context: "Redbee Software is an ISO-certified software development company based in Cluj-Napoca, Romania, recognized as a Deloitte Fast 50 and EMEA Fast 500 winner. They specialize in web, mobile, and ERP solutions for international clients.",
       problem: "As a fast-growing tech company expanding from Romania to UK and US markets, Redbee needed a brand identity that communicated technical excellence and trustworthiness at an international level.",
       solution: "Created a professional brand system that balances technical credibility with approachability. The identity positions Redbee as a premium nearshore partner while reflecting their certified quality standards and global ambitions.",
       approach: ["Client Briefing & Discovery Session", "Brand Strategy & Positioning", "Visual Direction & Concept Development", "Logo Design & Refinement", "Color Palette & Typography System", "Brand Presentation", "Print & Digital Application Testing", "Final Deliverables & Brand Guidelines"],
-      images: ["/images/branding/redbee/1.png", "/images/branding/redbee/2.png", "/images/branding/redbee/3.png", "/images/branding/redbee/4.png", "/images/branding/redbee/5.png"],
+      images: ["/images/branding/redbee/1.png", "/images/branding/redbee/2.jpg", "/images/branding/redbee/3.png", "/images/branding/redbee/4.png", "/images/branding/redbee/5.jpg"],
     },
     {
       id: "roboticsvalley", title: "Robotics Valley",
@@ -334,55 +385,55 @@ const portfolioProjects = {
       problem: "The initiative needed a brand identity that could attract both tech professionals and the general public, positioning robotics as accessible and future-oriented rather than intimidating.",
       solution: "Developed a dynamic visual identity that merges precision engineering aesthetics with human-centered warmth, making advanced technology feel approachable and inspiring.",
       approach: ["Client Briefing & Discovery Session", "Brand Strategy & Positioning", "Visual Direction & Concept Development", "Logo Design & Refinement", "Color Palette & Typography System", "Brand Presentation", "Print & Digital Application Testing", "Final Deliverables & Brand Guidelines"],
-      images: ["/images/branding/roboticsvalley/1.png", "/images/branding/roboticsvalley/2.png", "/images/branding/roboticsvalley/3.png", "/images/branding/roboticsvalley/4.png", "/images/branding/roboticsvalley/5.png"],
+      images: ["/images/branding/roboticsvalley/1.jpg", "/images/branding/roboticsvalley/2.jpg", "/images/branding/roboticsvalley/3.jpg", "/images/branding/roboticsvalley/4.jpg", "/images/branding/roboticsvalley/5.jpg"],
     },
     {
       id: "oriceinvitatie", title: "Oriceinvitatie",
       type: "Event Platform Brand Identity",
       role: "Brand Designer",
       tag: "Platform",
-      image: "/images/branding/oriceinvitatie/cover.png",
+      image: "/images/branding/oriceinvitatie/cover.jpg",
       context: "Oriceinvitatie is a digital platform for creating and managing event invitations, serving wedding events, personal celebrations, and special occasions across Romania.",
       problem: "The platform needed a cohesive brand identity that could feel equally appropriate for elegant wedding invitations and casual birthday parties — versatile without being generic.",
       solution: "Designed a flexible identity system with a celebratory yet refined visual language, allowing the brand to adapt across event types while maintaining strong recognition.",
       approach: ["Client Briefing & Discovery Session", "Brand Strategy & Positioning", "Visual Direction & Concept Development", "Logo Design & Refinement", "Color Palette & Typography System", "Brand Presentation", "Print & Digital Application Testing", "Final Deliverables & Brand Guidelines"],
-      images: ["/images/branding/oriceinvitatie/1.png"],
+      images: ["/images/branding/oriceinvitatie/1.jpg"],
     },
     {
       id: "turbo", title: "Turbo",
       type: "Coffee Shop Brand Identity",
       role: "Brand Designer",
       tag: "F&B",
-      image: "/images/branding/turbo/cover.png",
+      image: "/images/branding/turbo/cover.jpg",
       context: "Turbo is a specialty coffee shop built around the energy and ritual of great coffee — a fast-paced environment where quality meets convenience.",
       problem: "The coffee shop needed a visual identity that could capture its high-energy character and stand out in a crowded specialty coffee market, while feeling warm and inviting to daily regulars.",
       solution: "Created a bold, expressive brand system with dynamic typography and a rich color palette that communicates the intensity of great coffee, balanced with tactile materials and warm tones for an inviting in-store experience.",
       approach: ["Client Briefing & Discovery Session", "Brand Strategy & Positioning", "Visual Direction & Concept Development", "Logo Design & Refinement", "Color Palette & Typography System", "Brand Presentation", "Print & Digital Application Testing", "Final Deliverables & Brand Guidelines"],
-      images: ["/images/branding/turbo/1.png", "/images/branding/turbo/2.png", "/images/branding/turbo/3.png", "/images/branding/turbo/4.png", "/images/branding/turbo/5.png"],
+      images: ["/images/branding/turbo/1.jpg", "/images/branding/turbo/2.jpg", "/images/branding/turbo/3.jpg", "/images/branding/turbo/4.jpg", "/images/branding/turbo/5.jpg"],
     },
     {
       id: "zonametro", title: "Zona Metropolitană Timișoara",
       type: "Metropolitan Authority Brand Identity",
       role: "Brand Designer",
       tag: "Public",
-      image: "/images/branding/zonametro/cover.png",
+      image: "/images/branding/zonametro/cover.jpg",
       context: "Zona Metropolitană Timișoara is the metropolitan governance body coordinating urban development, transport, and public services across the greater Timișoara area.",
       problem: "The authority needed a modern visual identity that could represent multiple municipalities under one cohesive brand, communicating unity, progress, and civic partnership.",
       solution: "Designed an institutional identity system that balances administrative authority with forward-looking urbanism. The brand unifies diverse communities under a shared visual framework.",
       approach: ["Client Briefing & Discovery Session", "Brand Strategy & Positioning", "Visual Direction & Concept Development", "Logo Design & Refinement", "Color Palette & Typography System", "Brand Presentation", "Print & Digital Application Testing", "Final Deliverables & Brand Guidelines"],
-      images: ["/images/branding/zonametro/1.png", "/images/branding/zonametro/2.png", "/images/branding/zonametro/3.png", "/images/branding/zonametro/4.png", "/images/branding/zonametro/5.png"],
+      images: ["/images/branding/zonametro/1.png", "/images/branding/zonametro/2.png", "/images/branding/zonametro/3.png", "/images/branding/zonametro/4.jpg", "/images/branding/zonametro/5.png"],
     },
     {
       id: "mindtune", title: "MindTune Experts",
       type: "Consulting Brand Identity",
       role: "Brand Designer",
       tag: "Business",
-      image: "/images/branding/mindtune/cover.png",
+      image: "/images/branding/mindtune/cover.jpg",
       context: "MindTune Experts is a consulting and coaching practice focused on mindset development, professional growth, and organizational performance.",
       problem: "The brand needed to communicate expertise and transformative impact while avoiding the overused visual clichés of the coaching industry — brain icons, lightbulbs, generic gradients.",
       solution: "Created a refined identity that positions MindTune as a premium consultancy. The visual system uses precise typography and subtle motion metaphors to suggest fine-tuning and clarity of thought.",
       approach: ["Client Briefing & Discovery Session", "Brand Strategy & Positioning", "Visual Direction & Concept Development", "Logo Design & Refinement", "Color Palette & Typography System", "Brand Presentation", "Print & Digital Application Testing", "Final Deliverables & Brand Guidelines"],
-      images: ["/images/branding/mindtune/1.png", "/images/branding/mindtune/2.png", "/images/branding/mindtune/3.png", "/images/branding/mindtune/4.png", "/images/branding/mindtune/5.png"],
+      images: ["/images/branding/mindtune/1.jpg", "/images/branding/mindtune/2.jpg", "/images/branding/mindtune/3.jpg", "/images/branding/mindtune/4.jpg", "/images/branding/mindtune/5.jpg"],
     },
     {
       id: "urbanlab-brand", title: "Urbanlab",
@@ -394,19 +445,19 @@ const portfolioProjects = {
       problem: "The platform needed a visual identity that could bridge the gap between historical preservation and modern digital mapping — feeling both rooted and innovative.",
       solution: "Designed a brand identity that merges cartographic precision with cultural warmth, creating a visual language that respects heritage while embracing the digital tools used to preserve it.",
       approach: ["Client Briefing & Discovery Session", "Brand Strategy & Positioning", "Visual Direction & Concept Development", "Logo Design & Refinement", "Color Palette & Typography System", "Brand Presentation", "Print & Digital Application Testing", "Final Deliverables & Brand Guidelines"],
-      images: ["/images/branding/urbanlab-brand/1.png", "/images/branding/urbanlab-brand/2.png", "/images/branding/urbanlab-brand/3.png", "/images/branding/urbanlab-brand/4.png", "/images/branding/urbanlab-brand/5.png"],
+      images: ["/images/branding/urbanlab-brand/1.jpg", "/images/branding/urbanlab-brand/2.jpg", "/images/branding/urbanlab-brand/3.jpg", "/images/branding/urbanlab-brand/4.jpg", "/images/branding/urbanlab-brand/5.jpg"],
     },
     {
       id: "dopodoheal", title: "Dopodoheal",
       type: "Podology Clinic Brand Identity",
       role: "Brand Designer",
       tag: "Medical",
-      image: "/images/branding/dopodoheal/cover.png",
+      image: "/images/branding/dopodoheal/cover.jpg",
       context: "Dopodoheal is a podology clinic specializing in foot health, biomechanical assessments, and therapeutic treatments for patients seeking professional podiatric care.",
       problem: "The clinic needed a brand identity that could communicate medical expertise and specialized care while feeling approachable and reassuring to patients who may be unfamiliar with podology as a discipline.",
       solution: "Designed a clean, professional identity system that balances clinical credibility with warmth, using precise forms and a calming color palette to position Dopodoheal as a trusted specialist in foot health.",
       approach: ["Client Briefing & Discovery Session", "Brand Strategy & Positioning", "Visual Direction & Concept Development", "Logo Design & Refinement", "Color Palette & Typography System", "Brand Presentation", "Print & Digital Application Testing", "Final Deliverables & Brand Guidelines"],
-      images: ["/images/branding/dopodoheal/1.png", "/images/branding/dopodoheal/2.png", "/images/branding/dopodoheal/3.png", "/images/branding/dopodoheal/4.png", "/images/branding/dopodoheal/5.png"],
+      images: ["/images/branding/dopodoheal/1.jpg", "/images/branding/dopodoheal/2.jpg", "/images/branding/dopodoheal/3.jpg", "/images/branding/dopodoheal/4.jpg", "/images/branding/dopodoheal/5.jpg"],
     },
     {
       id: "mirgeoenergy", title: "MIR Geo Energy",
@@ -418,67 +469,67 @@ const portfolioProjects = {
       problem: "The company needed a professional brand identity that could convey both scientific rigor and environmental responsibility, positioning them as a serious player in the energy sector.",
       solution: "Designed a corporate identity system that balances geological precision with clean energy optimism, using structured forms and an earth-to-sky color progression.",
       approach: ["Client Briefing & Discovery Session", "Brand Strategy & Positioning", "Visual Direction & Concept Development", "Logo Design & Refinement", "Color Palette & Typography System", "Brand Presentation", "Print & Digital Application Testing", "Final Deliverables & Brand Guidelines"],
-      images: ["/images/branding/mirgeoenergy/1.png", "/images/branding/mirgeoenergy/2.png", "/images/branding/mirgeoenergy/3.png", "/images/branding/mirgeoenergy/4.png", "/images/branding/mirgeoenergy/5.png"],
+      images: ["/images/branding/mirgeoenergy/1.jpg", "/images/branding/mirgeoenergy/2.jpg", "/images/branding/mirgeoenergy/3.jpg", "/images/branding/mirgeoenergy/4.jpg", "/images/branding/mirgeoenergy/5.jpg"],
     },
     {
       id: "evointerior", title: "Evo Interior",
       type: "Interior Design Brand Identity",
       role: "Brand Designer",
       tag: "Design",
-      image: "/images/branding/evointerior/cover.png",
+      image: "/images/branding/evointerior/cover.jpg",
       context: "Evo Interior is an interior design studio specializing in residential and commercial space transformations.",
       problem: "The studio needed a brand identity that would reflect their design philosophy — modern, refined, and detail-oriented — while differentiating them in a crowded interior design market.",
       solution: "Created an elegant identity system with architectural precision and sophisticated material references, positioning Evo Interior as a premium design partner.",
       approach: ["Client Briefing & Discovery Session", "Brand Strategy & Positioning", "Visual Direction & Concept Development", "Logo Design & Refinement", "Color Palette & Typography System", "Brand Presentation", "Print & Digital Application Testing", "Final Deliverables & Brand Guidelines"],
-      images: ["/images/branding/evointerior/1.png", "/images/branding/evointerior/2.png", "/images/branding/evointerior/3.png", "/images/branding/evointerior/4.png", "/images/branding/evointerior/5.png"],
+      images: ["/images/branding/evointerior/1.jpg", "/images/branding/evointerior/2.jpg", "/images/branding/evointerior/3.jpg", "/images/branding/evointerior/4.jpg", "/images/branding/evointerior/5.png"],
     },
     {
       id: "selfit", title: "Selfit",
       type: "Fitness App Brand Identity",
       role: "Brand Designer",
       tag: "Health",
-      image: "/images/branding/selfit/cover.png",
+      image: "/images/branding/selfit/cover.jpg",
       context: "Selfit is a fitness and wellness application designed to help users build personalized workout routines and track their health progress.",
       problem: "The app needed a brand identity that could stand out in the saturated fitness app market while appealing to both beginners and dedicated fitness enthusiasts.",
       solution: "Designed a vibrant, motivational brand system with dynamic elements that scale from app icon to marketing materials, creating consistent energy across all touchpoints.",
       approach: ["Client Briefing & Discovery Session", "Brand Strategy & Positioning", "Visual Direction & Concept Development", "Logo Design & Refinement", "Color Palette & Typography System", "Brand Presentation", "Print & Digital Application Testing", "Final Deliverables & Brand Guidelines"],
-      images: ["/images/branding/selfit/1.png", "/images/branding/selfit/2.png", "/images/branding/selfit/3.png", "/images/branding/selfit/4.png", "/images/branding/selfit/5.png"],
+      images: ["/images/branding/selfit/1.jpg", "/images/branding/selfit/2.jpg", "/images/branding/selfit/3.jpg", "/images/branding/selfit/4.jpg", "/images/branding/selfit/5.png"],
     },
     {
       id: "brooklynzoo", title: "Brooklyn Zoo",
       type: "Entertainment Brand Identity",
       role: "Brand Designer",
       tag: "Entertainment",
-      image: "/images/branding/brooklynzoo/cover.png",
+      image: "/images/branding/brooklynzoo/cover.jpg",
       context: "Brooklyn Zoo is an entertainment and cultural venue bringing together live experiences, community events, and creative programming.",
       problem: "The venue needed a brand identity that captured urban energy and creative diversity while being instantly recognizable and adaptable across event types and marketing channels.",
       solution: "Created a bold, expressive identity with typographic flexibility and a dynamic color system that adapts to different event categories while maintaining strong brand cohesion.",
       approach: ["Client Briefing & Discovery Session", "Brand Strategy & Positioning", "Visual Direction & Concept Development", "Logo Design & Refinement", "Color Palette & Typography System", "Brand Presentation", "Print & Digital Application Testing", "Final Deliverables & Brand Guidelines"],
-      images: ["/images/branding/brooklynzoo/1.png", "/images/branding/brooklynzoo/2.png", "/images/branding/brooklynzoo/3.png", "/images/branding/brooklynzoo/4.png", "/images/branding/brooklynzoo/5.png"],
+      images: ["/images/branding/brooklynzoo/1.jpg", "/images/branding/brooklynzoo/2.jpg", "/images/branding/brooklynzoo/3.jpg", "/images/branding/brooklynzoo/4.jpg", "/images/branding/brooklynzoo/5.jpg"],
     },
     {
       id: "berarkelemen", title: "Berar & Kelemen",
       type: "Professional Services Brand Identity",
       role: "Brand Designer",
       tag: "Business",
-      image: "/images/branding/berarkelemen/cover.png",
+      image: "/images/branding/berarkelemen/cover.jpg",
       context: "Berar & Kelemen is a professional services firm built on the expertise and reputation of its founding partners.",
       problem: "The firm needed a brand identity that conveyed established credibility and professional excellence while feeling contemporary and approachable rather than stuffy or outdated.",
       solution: "Designed a refined, classic-modern identity system that balances traditional professional authority with clean contemporary aesthetics, reflecting the partners' combined expertise.",
       approach: ["Client Briefing & Discovery Session", "Brand Strategy & Positioning", "Visual Direction & Concept Development", "Logo Design & Refinement", "Color Palette & Typography System", "Brand Presentation", "Print & Digital Application Testing", "Final Deliverables & Brand Guidelines"],
-      images: ["/images/branding/berarkelemen/1.png", "/images/branding/berarkelemen/2.png", "/images/branding/berarkelemen/3.png", "/images/branding/berarkelemen/4.png", "/images/branding/berarkelemen/5.png"],
+      images: ["/images/branding/berarkelemen/1.jpg", "/images/branding/berarkelemen/2.jpg", "/images/branding/berarkelemen/3.jpg", "/images/branding/berarkelemen/4.jpg", "/images/branding/berarkelemen/5.jpg"],
     },
     {
       id: "dentasuport", title: "Denta Suport",
       type: "Dental Clinic Brand Identity",
       role: "Brand Designer",
       tag: "Medical",
-      image: "/images/branding/dentasuport/cover.png",
+      image: "/images/branding/dentasuport/cover.jpg",
       context: "Denta Suport is a dental clinic offering comprehensive oral health services with a focus on patient comfort and modern treatment methods.",
       problem: "The clinic needed a professional brand identity that could reduce dental anxiety by communicating warmth and care, while still projecting medical competence and trustworthiness.",
       solution: "Designed a warm yet clinical brand system that uses soft forms and a reassuring color palette to make dental care feel approachable, backed by precise typographic structures for professional credibility.",
       approach: ["Client Briefing & Discovery Session", "Brand Strategy & Positioning", "Visual Direction & Concept Development", "Logo Design & Refinement", "Color Palette & Typography System", "Brand Presentation", "Print & Digital Application Testing", "Final Deliverables & Brand Guidelines"],
-      images: ["/images/branding/dentasuport/1.png", "/images/branding/dentasuport/2.png", "/images/branding/dentasuport/3.png", "/images/branding/dentasuport/4.png", "/images/branding/dentasuport/5.png"],
+      images: ["/images/branding/dentasuport/1.jpg", "/images/branding/dentasuport/2.jpg", "/images/branding/dentasuport/3.jpg", "/images/branding/dentasuport/4.jpg", "/images/branding/dentasuport/5.jpg"],
     },
     {
       id: "clinicadezambete", title: "Clinica de Zâmbete",
@@ -490,19 +541,19 @@ const portfolioProjects = {
       problem: "The clinic needed a brand identity that embodied the joy of a confident smile while maintaining the professionalism expected of a medical practice.",
       solution: "Created a cheerful yet polished identity that centers on the emotional outcome — the smile — using warm tones and friendly geometry balanced with clean medical typography.",
       approach: ["Client Briefing & Discovery Session", "Brand Strategy & Positioning", "Visual Direction & Concept Development", "Logo Design & Refinement", "Color Palette & Typography System", "Brand Presentation", "Print & Digital Application Testing", "Final Deliverables & Brand Guidelines"],
-      images: ["/images/branding/clinicadezambete/1.png", "/images/branding/clinicadezambete/2.png", "/images/branding/clinicadezambete/3.png", "/images/branding/clinicadezambete/4.png", "/images/branding/clinicadezambete/5.png"],
+      images: ["/images/branding/clinicadezambete/1.jpg", "/images/branding/clinicadezambete/2.jpg", "/images/branding/clinicadezambete/3.png", "/images/branding/clinicadezambete/4.jpg", "/images/branding/clinicadezambete/5.jpg"],
     },
     {
       id: "litoralulromanesc", title: "Litoralul Românesc",
       type: "Tourism Brand Identity",
       role: "Brand Designer",
       tag: "Tourism",
-      image: "/images/branding/litoralulromanesc/cover.png",
+      image: "/images/branding/litoralulromanesc/cover.jpg",
       context: "Litoralul Românesc is a tourism promotion initiative for the Romanian Black Sea coastline, aiming to attract domestic and international visitors.",
       problem: "The Romanian coastline needed a cohesive brand identity that could compete with established Mediterranean destinations, reframing perceptions and highlighting unique coastal experiences.",
       solution: "Designed a vibrant, sun-and-sea inspired identity system that captures the charm and diversity of Romania's coast, from historic Constanța to the wild Danube Delta shores.",
       approach: ["Client Briefing & Discovery Session", "Brand Strategy & Positioning", "Visual Direction & Concept Development", "Logo Design & Refinement", "Color Palette & Typography System", "Brand Presentation", "Print & Digital Application Testing", "Final Deliverables & Brand Guidelines"],
-      images: ["/images/branding/litoralulromanesc/1.png", "/images/branding/litoralulromanesc/2.png", "/images/branding/litoralulromanesc/3.png", "/images/branding/litoralulromanesc/4.png", "/images/branding/litoralulromanesc/5.png"],
+      images: ["/images/branding/litoralulromanesc/1.jpg", "/images/branding/litoralulromanesc/2.jpg", "/images/branding/litoralulromanesc/3.jpg", "/images/branding/litoralulromanesc/4.jpg", "/images/branding/litoralulromanesc/5.jpg"],
     },
     {
       id: "idpatrimoniu", title: "Identitate și Patrimoniu",
@@ -514,19 +565,19 @@ const portfolioProjects = {
       problem: "The program needed a brand identity that could make heritage preservation feel relevant and engaging to younger generations while respecting the gravitas of cultural conservation.",
       solution: "Created a sophisticated identity that bridges past and present — using archival visual references filtered through contemporary design principles to make heritage feel living and urgent.",
       approach: ["Client Briefing & Discovery Session", "Brand Strategy & Positioning", "Visual Direction & Concept Development", "Logo Design & Refinement", "Color Palette & Typography System", "Brand Presentation", "Print & Digital Application Testing", "Final Deliverables & Brand Guidelines"],
-      images: ["/images/branding/idpatrimoniu/1.png", "/images/branding/idpatrimoniu/2.png", "/images/branding/idpatrimoniu/3.png", "/images/branding/idpatrimoniu/4.png", "/images/branding/idpatrimoniu/5.png"],
+      images: ["/images/branding/idpatrimoniu/1.jpg", "/images/branding/idpatrimoniu/2.jpg", "/images/branding/idpatrimoniu/3.jpg", "/images/branding/idpatrimoniu/4.jpg", "/images/branding/idpatrimoniu/5.jpg"],
     },
     {
       id: "ecolab", title: "Ecolab",
       type: "Environmental Brand Identity",
       role: "Brand Designer",
       tag: "Sustainability",
-      image: "/images/branding/ecolab/cover.png",
+      image: "/images/branding/ecolab/cover.jpg",
       context: "Ecolab is an environmental initiative focused on ecological education, sustainable practices, and community-level environmental action.",
       problem: "The initiative needed a brand identity that could communicate environmental urgency without being preachy, inspiring action through positive, solutions-oriented visual messaging.",
       solution: "Designed a fresh, growth-oriented brand system using natural forms and an evolving color palette that progresses from earth to canopy, symbolizing regeneration and positive environmental impact.",
       approach: ["Client Briefing & Discovery Session", "Brand Strategy & Positioning", "Visual Direction & Concept Development", "Logo Design & Refinement", "Color Palette & Typography System", "Brand Presentation", "Print & Digital Application Testing", "Final Deliverables & Brand Guidelines"],
-      images: ["/images/branding/ecolab/1.png", "/images/branding/ecolab/2.png", "/images/branding/ecolab/3.png", "/images/branding/ecolab/4.png", "/images/branding/ecolab/5.png"],
+      images: ["/images/branding/ecolab/1.jpg", "/images/branding/ecolab/2.jpg", "/images/branding/ecolab/3.jpg", "/images/branding/ecolab/4.jpg", "/images/branding/ecolab/5.jpg"],
     },
   ],
 };
@@ -1480,20 +1531,20 @@ function Hero() {
 const showcaseItems = [
   // Column 1 — Brand → Product → Brand
   { id: 1, image: "/images/branding/forum01115/cover.png", label: "ForUM01115", tag: "Community", col: 0 },
-  { id: 2, image: "/images/covers/wesupply.png", label: "WeSupply", tag: "SaaS", col: 0 },
-  { id: 3, image: "/images/branding/redbee/cover.png", label: "Redbee Software", tag: "Tech", col: 0 },
+  { id: 2, image: "/images/covers/wesupply.jpg", label: "WeSupply", tag: "SaaS", col: 0 },
+  { id: 3, image: "/images/branding/redbee/cover.jpg", label: "Redbee Software", tag: "Tech", col: 0 },
   // Column 2 — Product → Brand → Product
-  { id: 4, image: "/images/covers/urbanlab.png", label: "Urbanlab", tag: "Platform", col: 1 },
-  { id: 5, image: "/images/branding/zonametro/cover.png", label: "Zona Metropolitană", tag: "Public", col: 1 },
-  { id: 6, image: "/images/covers/geoint.png", label: "GeoInt", tag: "Dashboard", col: 1 },
+  { id: 4, image: "/images/covers/urbanlab.jpg", label: "Urbanlab", tag: "Platform", col: 1 },
+  { id: 5, image: "/images/branding/zonametro/cover.jpg", label: "Zona Metropolitană", tag: "Public", col: 1 },
+  { id: 6, image: "/images/covers/geoint.jpg", label: "GeoInt", tag: "Dashboard", col: 1 },
   // Column 3 — Brand → Personal → Brand
-  { id: 7, image: "/images/branding/mindtune/cover.png", label: "MindTune", tag: "Consulting", col: 2 },
-  { id: 8, image: "/images/showcase/7.png", label: "Tale Jewelry", tag: "Spatial AR", col: 2 },
+  { id: 7, image: "/images/branding/mindtune/cover.jpg", label: "MindTune", tag: "Consulting", col: 2 },
+  { id: 8, image: "/images/showcase/7.jpg", label: "Tale Jewelry", tag: "Spatial AR", col: 2 },
   { id: 9, image: "/images/branding/roboticsvalley/cover.png", label: "Robotics Valley", tag: "Innovation", col: 2 },
   // Column 4 — Product → Brand → Product
-  { id: 10, image: "/images/covers/dreamtter.png", label: "Dreamtter", tag: "Mobile App", col: 3 },
-  { id: 11, image: "/images/branding/turbo/cover.png", label: "Turbo Coffee", tag: "F&B", col: 3 },
-  { id: 12, image: "/images/covers/refracto.png", label: "Refracto", tag: "SaaS", col: 3 },
+  { id: 10, image: "/images/covers/dreamtter.jpg", label: "Dreamtter", tag: "Mobile App", col: 3 },
+  { id: 11, image: "/images/branding/turbo/cover.jpg", label: "Turbo Coffee", tag: "F&B", col: 3 },
+  { id: 12, image: "/images/covers/refracto.jpg", label: "Refracto", tag: "SaaS", col: 3 },
 ];
 
 function ShowcaseGallery() {
@@ -1597,17 +1648,18 @@ function ShowcaseGallery() {
                       key={`${item.id}-${colIdx}-${idx}`}
                       className="showcase-card img-shield"
                     >
-                      {/* Image */}
-                      <div style={{
-                        aspectRatio: "3/4",
-                        borderRadius: 0,
-                        overflow: "hidden",
-                        background: item.image
-                          ? `url(${item.image}) center/cover no-repeat`
-                          : `linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%)`,
-                      }}>
-                        {/* Fallback initials when no image loaded */}
-                        {!item.image.includes("http") && (
+                      {/* Image — lazy loaded */}
+                      <LazyImage
+                        src={item.image}
+                        alt={item.label}
+                        aspectRatio="3/4"
+                        style={{
+                          borderRadius: 0,
+                          overflow: "hidden",
+                        }}
+                      />
+                      <div style={{ display: "none" }}>
+                        {!item.image && (
                           <div style={{
                             width: "100%", height: "100%",
                             display: "flex", alignItems: "center", justifyContent: "center",
@@ -1980,17 +2032,22 @@ function WorkPreview({ setPage, openProject }) {
       }}
       whileHover={{ y: -4, boxShadow: "0 12px 40px rgba(255,255,255,0.06)" }}
     >
-      <div className="img-shield" style={{
-        height: 180, position: "relative", overflow: "hidden",
-        background: cs.image ? `url(${cs.image}) center/cover no-repeat` : `linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01))`,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        transition: "transform 0.6s var(--ease-out-expo)",
-      }}
-      onMouseEnter={e => e.currentTarget.style.transform = "scale(1.05)"}
-      onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
-      >
+      <div style={{ position: "relative", height: 180, overflow: "hidden" }}>
+        <LazyImage
+          src={cs.image}
+          alt={cs.title}
+          className="img-shield"
+          style={{
+            position: "absolute", inset: 0,
+            transition: "transform 0.6s var(--ease-out-expo)",
+          }}
+        />
         {!cs.image && (
-          <span style={{ fontSize: 48, fontWeight: 800, color: "rgba(255,255,255,0.06)", fontFamily: "var(--font-mono)" }}>
+          <span style={{
+            position: "absolute", inset: 0,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 48, fontWeight: 800, color: "rgba(255,255,255,0.06)", fontFamily: "var(--font-mono)",
+          }}>
             {cs.title.slice(0, 2).toUpperCase()}
           </span>
         )}
@@ -2718,18 +2775,18 @@ function DesignROICalculator() {
 
 // ─── Contact Slideshow Data ───
 const contactSlides = [
-  { id: 1, image: "/images/covers/wesupply.png", label: "WeSupply", tag: "SaaS" },
+  { id: 1, image: "/images/covers/wesupply.jpg", label: "WeSupply", tag: "SaaS" },
   { id: 2, image: "/images/branding/forum01115/cover.png", label: "ForUM01115", tag: "Community" },
-  { id: 3, image: "/images/covers/urbanlab.png", label: "Urbanlab", tag: "Platform" },
-  { id: 4, image: "/images/branding/redbee/cover.png", label: "Redbee Software", tag: "Tech" },
-  { id: 5, image: "/images/showcase/7.png", label: "Tale Jewelry", tag: "Spatial" },
-  { id: 6, image: "/images/covers/geoint.png", label: "GeoInt", tag: "Dashboard" },
-  { id: 7, image: "/images/branding/zonametro/cover.png", label: "Zona Metropolitană", tag: "Public" },
-  { id: 8, image: "/images/covers/dreamtter.png", label: "Dreamtter", tag: "Mobile" },
-  { id: 9, image: "/images/branding/mindtune/cover.png", label: "MindTune", tag: "Consulting" },
-  { id: 10, image: "/images/showcase/8.png", label: "Visen", tag: "VR / AR" },
-  { id: 11, image: "/images/covers/refracto.png", label: "Refracto", tag: "SaaS" },
-  { id: 12, image: "/images/branding/turbo/cover.png", label: "Turbo Coffee", tag: "F&B" },
+  { id: 3, image: "/images/covers/urbanlab.jpg", label: "Urbanlab", tag: "Platform" },
+  { id: 4, image: "/images/branding/redbee/cover.jpg", label: "Redbee Software", tag: "Tech" },
+  { id: 5, image: "/images/showcase/7.jpg", label: "Tale Jewelry", tag: "Spatial" },
+  { id: 6, image: "/images/covers/geoint.jpg", label: "GeoInt", tag: "Dashboard" },
+  { id: 7, image: "/images/branding/zonametro/cover.jpg", label: "Zona Metropolitană", tag: "Public" },
+  { id: 8, image: "/images/covers/dreamtter.jpg", label: "Dreamtter", tag: "Mobile" },
+  { id: 9, image: "/images/branding/mindtune/cover.jpg", label: "MindTune", tag: "Consulting" },
+  { id: 10, image: "/images/showcase/8.jpg", label: "Visen", tag: "VR / AR" },
+  { id: 11, image: "/images/covers/refracto.jpg", label: "Refracto", tag: "SaaS" },
+  { id: 12, image: "/images/branding/turbo/cover.jpg", label: "Turbo Coffee", tag: "F&B" },
 ];
 
 function Contact() {
@@ -2768,20 +2825,12 @@ function Contact() {
               className="hmarquee-card img-shield"
               style={{ width: mobile ? 140 : 200 }}
             >
-              <div style={{
-                aspectRatio: "3/4", borderRadius: 0,
-                background: `url(${item.image}) center/cover no-repeat`,
-                backgroundColor: "rgba(255,255,255,0.04)",
-              }}>
-                <div style={{
-                  width: "100%", height: "100%", display: "flex",
-                  alignItems: "center", justifyContent: "center",
-                  fontSize: mobile ? 20 : 28, fontWeight: 800,
-                  color: "rgba(255,255,255,0.04)", fontFamily: "var(--font-mono)",
-                }}>
-                  {item.label.slice(0, 2).toUpperCase()}
-                </div>
-              </div>
+              <LazyImage
+                src={item.image}
+                alt={item.label}
+                aspectRatio="3/4"
+                style={{ borderRadius: 0 }}
+              />
               <div className="hmarquee-label">
                 <span style={{
                   fontSize: 8, fontWeight: 700, color: WHITE, fontFamily: "var(--font-mono)",
@@ -3195,13 +3244,21 @@ function MasonryCard({ project, index, onSelect, mobile }) {
         transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] }
       }}
     >
-      {/* Image area */}
-      <div className="img-shield" style={{
-        aspectRatio: ratio,
-        background: `url(${p.image}) center/cover no-repeat`,
-        position: "relative",
-        overflow: "hidden",
-        transition: "transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
+      {/* Image area — lazy loaded */}
+      <LazyImage
+        src={p.image}
+        alt={p.title}
+        className="img-shield"
+        style={{
+          aspectRatio: ratio,
+          position: "relative",
+          overflow: "hidden",
+          transition: "transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
+        }}
+      />
+      <div style={{
+        position: "absolute", inset: 0, pointerEvents: "none",
+        display: "flex", flexDirection: "column",
       }}>
         {/* Tag badge */}
         <span style={{
@@ -3246,12 +3303,17 @@ function ProjectModal({ project, onClose, mobile }) {
   const p = project;
   const isPersonal = p.gridImages !== undefined;
   const displayImages = isPersonal ? p.gridImages : (p.images || []);
+  const scrollContainerRef = useRef(null);
 
   useEffect(() => {
     const handleKey = (e) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", handleKey);
+    // Reset scroll position to top when opening
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+    }
     return () => window.removeEventListener("keydown", handleKey);
-  }, [onClose]);
+  }, [onClose, project]);
 
   return (
     <motion.div
@@ -3265,9 +3327,15 @@ function ProjectModal({ project, onClose, mobile }) {
         backdropFilter: "blur(20px) saturate(180%)",
         WebkitBackdropFilter: "blur(20px) saturate(180%)",
       }}
-      onClick={onClose}
     >
+      {/* Click-outside backdrop layer (separate from scroll container) */}
+      <div
+        onClick={onClose}
+        style={{ position: "absolute", inset: 0, cursor: "pointer" }}
+      />
+
       <motion.div
+        ref={scrollContainerRef}
         initial={{ scale: 0.92, opacity: 0, filter: "blur(20px)" }}
         animate={{ scale: 1, opacity: 1, filter: "blur(0px)" }}
         exit={{ scale: 0.96, opacity: 0, filter: "blur(20px)" }}
@@ -3276,31 +3344,36 @@ function ProjectModal({ project, onClose, mobile }) {
         style={{
           position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
           background: DARK,
-          overflowY: "auto",
+          overflowY: "scroll",
           overflowX: "hidden",
+          WebkitOverflowScrolling: "touch",
+          overscrollBehavior: "contain",
+          touchAction: "pan-y",
         }}
       >
-        {/* Close button */}
+        {/* Close button — sticky to viewport */}
         <button
           onClick={onClose}
+          aria-label="Close project"
           style={{
             position: "fixed", top: mobile ? 16 : 24, right: mobile ? 16 : 32,
             width: 48, height: 48, borderRadius: "50%",
-            background: "rgba(255,255,255,0.06)",
-            border: "1px solid rgba(255,255,255,0.12)",
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
+            background: "rgba(11,11,11,0.7)",
+            border: "1px solid rgba(255,255,255,0.18)",
+            backdropFilter: "blur(20px) saturate(180%)",
+            WebkitBackdropFilter: "blur(20px) saturate(180%)",
             display: "flex", alignItems: "center", justifyContent: "center",
             cursor: "pointer", zIndex: 100,
             transition: "all 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
           }}
-          onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.12)"; e.currentTarget.style.transform = "scale(1.1)"; }}
-          onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.transform = "none"; }}
+          onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.95)"; e.currentTarget.style.transform = "scale(1.08)"; e.currentTarget.querySelector("svg").setAttribute("color", DARK); }}
+          onMouseLeave={e => { e.currentTarget.style.background = "rgba(11,11,11,0.7)"; e.currentTarget.style.transform = "none"; e.currentTarget.querySelector("svg").setAttribute("color", WHITE); }}
         >
           <X size={20} color={WHITE} />
         </button>
 
-        <div style={{ maxWidth: 1100, margin: "0 auto", padding: mobile ? "80px 20px 60px" : "100px 40px 80px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: mobile ? "80px 20px 80px" : "100px 40px 100px" }}>
           {/* Hero */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -3328,18 +3401,24 @@ function ProjectModal({ project, onClose, mobile }) {
             </p>
           </motion.div>
 
-          {/* Cover image */}
+          {/* Cover image - eager (above fold) */}
           {p.image && (
-            <motion.div
+            <motion.img
+              src={p.image}
+              alt={p.title}
+              loading="eager"
+              fetchpriority="high"
+              decoding="async"
               initial={{ opacity: 0, filter: "blur(8px)", scale: 1.02 }}
               animate={{ opacity: 1, filter: "blur(0px)", scale: 1 }}
               transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
               className="img-shield"
               style={{
-                aspectRatio: "16/9", marginBottom: mobile ? 32 : 56,
-                background: `url(${p.image}) center/cover no-repeat`,
-                background: `url(${p.image}) center/cover no-repeat, ${DARK2}`,
+                width: "100%", aspectRatio: "16/9", objectFit: "cover",
+                marginBottom: mobile ? 32 : 56,
+                background: DARK2,
                 border: "1px solid rgba(255,255,255,0.06)",
+                display: "block",
               }}
             />
           )}
@@ -3433,7 +3512,7 @@ function ProjectModal({ project, onClose, mobile }) {
                 </motion.div>
               )}
 
-              {/* Gallery */}
+              {/* Gallery - LAZY LOADED */}
               {displayImages && displayImages.length > 0 && (
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -3453,17 +3532,24 @@ function ProjectModal({ project, onClose, mobile }) {
                     gap: mobile ? 12 : 20,
                   }}>
                     {displayImages.map((img, i) => (
-                      <motion.div
+                      <motion.img
                         key={i}
+                        src={img}
+                        alt={`${p.title} — image ${i + 1}`}
+                        loading="lazy"
+                        decoding="async"
                         initial={{ opacity: 0, filter: "blur(8px)", y: 20 }}
                         whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
                         viewport={{ once: true, margin: "-40px" }}
-                        transition={{ duration: 0.7, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                        transition={{ duration: 0.7, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
                         className="img-shield"
                         style={{
+                          width: "100%",
                           aspectRatio: isPersonal ? "3/4" : "16/9",
-                          background: `url(${img}) center/cover no-repeat, ${DARK2}`,
+                          objectFit: "cover",
+                          background: DARK2,
                           border: "1px solid rgba(255,255,255,0.06)",
+                          display: "block",
                         }}
                       />
                     ))}
