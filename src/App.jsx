@@ -1547,7 +1547,7 @@ const showcaseItems = [
   { id: 12, projectId: "refracto", image: "/images/covers/refracto.jpg", label: "Refracto", tag: "SaaS", col: 3 },
 ];
 
-function ShowcaseGallery({ setPage, setExpandProject }) {
+function ShowcaseGallery({ openProjectPage }) {
   const mobile = useIsMobile();
   const colCount = mobile ? 2 : 4;
   const containerRef = useRef(null);
@@ -1648,9 +1648,8 @@ function ShowcaseGallery({ setPage, setExpandProject }) {
                       key={`${item.id}-${colIdx}-${idx}`}
                       className="showcase-card img-shield"
                       onClick={() => {
-                        if (item.projectId && setExpandProject && setPage) {
-                          setExpandProject(item.projectId);
-                          setPage("portfolio");
+                        if (item.projectId && openProjectPage) {
+                          openProjectPage(item.projectId);
                         }
                       }}
                       style={{ cursor: item.projectId ? "pointer" : "default" }}
@@ -2944,10 +2943,9 @@ function Footer() {
 }
 
 // ─── Portfolio Page ───
-function PortfolioPage({ setPage, expandProject, setExpandProject }) {
+function PortfolioPage({ setPage, openProjectPage }) {
   const [activeFilter, setActiveFilter] = useState("all");
   const [filterPinned, setFilterPinned] = useState(false);
-  const [openProject, setOpenProject] = useState(null);
   const filterSentinelRef = useRef(null);
   const mobile = useIsMobile();
   const filters = ["all", "product", "branding", "personal"];
@@ -2962,31 +2960,6 @@ function PortfolioPage({ setPage, expandProject, setExpandProject }) {
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, []);
-
-  // Open from URL param expandProject
-  useEffect(() => {
-    if (expandProject) {
-      const all = [...portfolioProjects.product, ...portfolioProjects.branding, ...portfolioProjects.personal];
-      const proj = all.find(p => p.id === expandProject);
-      if (proj) setOpenProject(proj);
-      setExpandProject(null);
-    }
-  }, [expandProject, setExpandProject]);
-
-  // Lock body scroll when modal is open
-  useEffect(() => {
-    if (openProject) {
-      document.body.style.overflow = "hidden";
-      if (window.lenis) window.lenis.stop();
-    } else {
-      document.body.style.overflow = "";
-      if (window.lenis) window.lenis.start();
-    }
-    return () => {
-      document.body.style.overflow = "";
-      if (window.lenis) window.lenis.start();
-    };
-  }, [openProject]);
 
   return (
     <div style={{ paddingTop: 100 }}>
@@ -3057,7 +3030,7 @@ function PortfolioPage({ setPage, expandProject, setExpandProject }) {
           {activeFilter === "all" && (
             <SectionLabel icon={Layers} label="Product Design & Strategy" count={portfolioProjects.product.length} />
           )}
-          <MasonryGrid projects={portfolioProjects.product} onSelect={setOpenProject} mobile={mobile} />
+          <MasonryGrid projects={portfolioProjects.product} onSelect={(p) => openProjectPage(p.id)} mobile={mobile} />
         </div>
       )}
 
@@ -3066,7 +3039,7 @@ function PortfolioPage({ setPage, expandProject, setExpandProject }) {
           {activeFilter === "all" && (
             <SectionLabel icon={Palette} label="Brand Identity" count={portfolioProjects.branding.length} />
           )}
-          <MasonryGrid projects={portfolioProjects.branding} onSelect={setOpenProject} mobile={mobile} />
+          <MasonryGrid projects={portfolioProjects.branding} onSelect={(p) => openProjectPage(p.id)} mobile={mobile} />
         </div>
       )}
 
@@ -3075,7 +3048,7 @@ function PortfolioPage({ setPage, expandProject, setExpandProject }) {
           {activeFilter === "all" && (
             <SectionLabel icon={Layers} label="Personal Projects — Spatial Design" count={portfolioProjects.personal.length} />
           )}
-          <MasonryGrid projects={portfolioProjects.personal} onSelect={setOpenProject} mobile={mobile} />
+          <MasonryGrid projects={portfolioProjects.personal} onSelect={(p) => openProjectPage(p.id)} mobile={mobile} />
         </div>
       )}
 
@@ -3105,12 +3078,6 @@ function PortfolioPage({ setPage, expandProject, setExpandProject }) {
 
       <Footer />
 
-      {/* Full-screen project modal */}
-      <AnimatePresence>
-        {openProject && (
-          <ProjectModal project={openProject} onClose={() => setOpenProject(null)} mobile={mobile} />
-        )}
-      </AnimatePresence>
     </div>
   );
 }
@@ -3306,6 +3273,246 @@ function MasonryCard({ project, index, onSelect, mobile }) {
 }
 
 // ─── Full-Screen Project Modal ───
+// ─── Standalone Project Page (URL: /project/{id}) ───
+function ProjectPage({ projectId, setPage }) {
+  const mobile = useIsMobile();
+  const all = [...portfolioProjects.product, ...portfolioProjects.branding, ...portfolioProjects.personal];
+  const p = all.find(x => x.id === projectId);
+
+  if (!p) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 40 }}>
+        <div style={{ textAlign: "center" }}>
+          <h1 style={{ fontSize: 32, marginBottom: 12 }}>Project not found</h1>
+          <p style={{ color: GRAY, marginBottom: 24 }}>This project may have been removed or the link is incorrect.</p>
+          <button
+            onClick={() => setPage("portfolio")}
+            style={{
+              background: BLUE, color: DARK, border: "none",
+              padding: "12px 24px", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer",
+            }}
+          >
+            Back to Portfolio
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const isPersonal = p.gridImages !== undefined;
+  const displayImages = isPersonal ? p.gridImages : (p.images || []);
+
+  return (
+    <div style={{ paddingTop: 100, paddingBottom: 80, minHeight: "100vh" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: mobile ? "20px 20px 40px" : "40px 40px 60px" }}>
+        {/* Back link */}
+        <button
+          onClick={() => setPage("portfolio")}
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            background: "transparent",
+            color: "rgba(255,255,255,0.75)",
+            border: "1px solid rgba(255,255,255,0.12)",
+            padding: "8px 14px", borderRadius: 100,
+            fontSize: 12, fontWeight: 500, fontFamily: "var(--font-mono)",
+            cursor: "pointer", marginBottom: mobile ? 24 : 32,
+            transition: "all 0.3s",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)"; e.currentTarget.style.color = WHITE; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; e.currentTarget.style.color = "rgba(255,255,255,0.75)"; }}
+        >
+          <ArrowDown size={14} style={{ transform: "rotate(90deg)" }} />
+          Back to Portfolio
+        </button>
+
+        {/* Hero */}
+        <div style={{ marginBottom: mobile ? 32 : 48 }}>
+          <span style={{
+            display: "inline-block",
+            fontSize: 10, fontWeight: 700, color: BLUE, fontFamily: "var(--font-mono)",
+            letterSpacing: "0.1em", textTransform: "uppercase",
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            padding: "5px 12px", borderRadius: 100, marginBottom: 20,
+          }}>
+            {p.tag} · {p.type}
+          </span>
+          <h1 style={{
+            fontSize: mobile ? "clamp(32px, 8vw, 48px)" : "clamp(48px, 6vw, 80px)",
+            fontWeight: 700, lineHeight: 1.05, letterSpacing: "-0.03em",
+            marginBottom: 16,
+          }}>{p.title}</h1>
+          <p style={{ fontSize: mobile ? 14 : 16, color: GRAY, fontFamily: "var(--font-mono)" }}>
+            {p.role}{p.location ? ` · ${p.location}` : ""}
+          </p>
+        </div>
+
+        {/* Cover image - eager (above fold) */}
+        {p.image && (
+          <img
+            src={p.image}
+            alt={p.title}
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
+            style={{
+              width: "100%", aspectRatio: "16/9", objectFit: "cover",
+              marginBottom: mobile ? 32 : 56,
+              background: DARK2,
+              border: "1px solid rgba(255,255,255,0.06)",
+              display: "block",
+            }}
+          />
+        )}
+
+        {p.noExpand ? (
+          <p style={{
+            fontSize: 14, color: GRAY, fontStyle: "italic",
+            textAlign: "center", padding: "40px 20px",
+            background: "rgba(255,255,255,0.02)",
+            border: "1px solid rgba(255,255,255,0.06)",
+            borderRadius: 12,
+          }}>
+            More details cannot be displayed due to NDA.
+          </p>
+        ) : (
+          <>
+            {/* Context / Problem / Solution */}
+            {p.context && (
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: mobile ? "1fr" : "repeat(3, 1fr)",
+                gap: mobile ? 24 : 32,
+                marginBottom: mobile ? 40 : 64,
+              }}>
+                {[
+                  { label: "Context", content: p.context },
+                  { label: "Problem", content: p.problem },
+                  { label: "Solution", content: p.solution },
+                ].map((sec, i) => (
+                  <div key={i}>
+                    <div style={{
+                      fontSize: 10, fontWeight: 700, color: BLUE,
+                      fontFamily: "var(--font-mono)", letterSpacing: "0.1em",
+                      textTransform: "uppercase", marginBottom: 12,
+                    }}>
+                      {sec.label}
+                    </div>
+                    <p style={{ fontSize: 14, color: WHITE, lineHeight: 1.7 }}>
+                      {sec.content}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Approach */}
+            {p.approach && (
+              <div style={{ marginBottom: mobile ? 40 : 64 }}>
+                <div style={{
+                  fontSize: 11, fontWeight: 700, color: BLUE,
+                  fontFamily: "var(--font-mono)", letterSpacing: "0.1em",
+                  textTransform: "uppercase", marginBottom: 20,
+                }}>
+                  Approach
+                </div>
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: mobile ? "1fr" : "repeat(2, 1fr)",
+                  gap: 12,
+                }}>
+                  {p.approach.map((step, i) => (
+                    <div key={i} style={{
+                      display: "flex", gap: 14, padding: "16px 18px",
+                      background: "rgba(255,255,255,0.02)",
+                      border: "1px solid rgba(255,255,255,0.06)",
+                      borderRadius: 10,
+                    }}>
+                      <span style={{
+                        fontSize: 11, fontWeight: 700, color: BLUE,
+                        fontFamily: "var(--font-mono)", minWidth: 24,
+                      }}>0{i + 1}</span>
+                      <span style={{ fontSize: 13, color: WHITE, lineHeight: 1.5 }}>{step}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Gallery - LAZY LOADED */}
+            {displayImages && displayImages.length > 0 && (
+              <div>
+                <div style={{
+                  fontSize: 11, fontWeight: 700, color: BLUE,
+                  fontFamily: "var(--font-mono)", letterSpacing: "0.1em",
+                  textTransform: "uppercase", marginBottom: 20,
+                }}>
+                  Gallery
+                </div>
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: isPersonal ? (mobile ? "1fr 1fr" : "1fr 1fr 1fr") : "1fr",
+                  gap: mobile ? 12 : 20,
+                }}>
+                  {displayImages.map((img, i) => (
+                    <img
+                      key={i}
+                      src={img}
+                      alt={`${p.title} — image ${i + 1}`}
+                      loading="lazy"
+                      decoding="async"
+                      style={{
+                        width: "100%",
+                        aspectRatio: isPersonal ? "3/4" : "16/9",
+                        objectFit: "cover",
+                        background: DARK2,
+                        border: "1px solid rgba(255,255,255,0.06)",
+                        display: "block",
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Bottom CTA */}
+        <div style={{
+          marginTop: mobile ? 60 : 80,
+          padding: mobile ? "32px 24px" : "48px 40px",
+          background: "rgba(255,255,255,0.02)",
+          border: "1px solid rgba(255,255,255,0.06)",
+          borderRadius: 16, textAlign: "center",
+        }}>
+          <h3 style={{ fontSize: mobile ? 22 : 28, fontWeight: 700, marginBottom: 12 }}>Have a project in mind?</h3>
+          <p style={{ fontSize: 14, color: GRAY, marginBottom: 24 }}>Let's discuss your brand or product vision.</p>
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexDirection: mobile ? "column" : "row" }}>
+            <a href="https://calendly.com/catalin-dobrean/30min" target="_blank" rel="noopener" style={{
+              display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
+              background: BLUE, color: DARK, padding: "14px 28px", borderRadius: 10,
+              fontSize: 14, fontWeight: 600, textDecoration: "none",
+              width: mobile ? "100%" : "auto",
+            }}>
+              Schedule a Meeting <ArrowUpRight size={14} />
+            </a>
+            <a href="https://wa.me/40720570232" target="_blank" rel="noopener" style={{
+              display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
+              background: "#25D366", color: "#fff", padding: "14px 28px", borderRadius: 10,
+              fontSize: 14, fontWeight: 600, textDecoration: "none",
+              width: mobile ? "100%" : "auto",
+            }}>
+              <WhatsAppIcon size={16} color="#fff" /> WhatsApp
+            </a>
+          </div>
+        </div>
+      </div>
+      <Footer />
+    </div>
+  );
+}
+
+// ─── Legacy modal (kept for compatibility but no longer used) ───
 function ProjectModal({ project, onClose, mobile }) {
   const p = project;
   const isPersonal = p.gridImages !== undefined;
@@ -4621,13 +4828,18 @@ function CustomCursor() {
 
 function getPageFromURL() {
   const path = window.location.pathname.replace(/^\//, "").replace(/\/$/, "");
-  if (path === "portfolio") return "portfolio";
-  if (path === "resume") return "resume";
-  return "home";
+  if (path === "portfolio") return { page: "portfolio", projectId: null };
+  if (path === "resume") return { page: "resume", projectId: null };
+  if (path.startsWith("project/")) {
+    return { page: "project", projectId: path.replace("project/", "") };
+  }
+  return { page: "home", projectId: null };
 }
 
 export default function App() {
-  const [page, setPageState] = useState(getPageFromURL);
+  const initial = getPageFromURL();
+  const [page, setPageState] = useState(initial.page);
+  const [projectId, setProjectId] = useState(initial.projectId);
   const [expandProject, setExpandProject] = useState(null);
   useImageProtection();
 
@@ -4655,22 +4867,31 @@ export default function App() {
     const url = p === "home" ? "/" : `/${p}`;
     window.history.pushState({}, "", url);
     setPageState(p);
+    setProjectId(null);
+    window.scrollTo(0, 0);
+  };
+
+  const openProjectPage = (id) => {
+    window.history.pushState({}, "", `/project/${id}`);
+    setPageState("project");
+    setProjectId(id);
     window.scrollTo(0, 0);
   };
 
   // Listen for browser back/forward
   useEffect(() => {
     const onPop = () => {
-      setPageState(getPageFromURL());
+      const next = getPageFromURL();
+      setPageState(next.page);
+      setProjectId(next.projectId);
       window.scrollTo(0, 0);
     };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
-  const openProject = (projectId) => {
-    setExpandProject(projectId);
-    navigate("portfolio");
+  const openProject = (pid) => {
+    openProjectPage(pid);
   };
 
   return (
@@ -4681,7 +4902,7 @@ export default function App() {
       <Nav page={page} setPage={navigate} />
       <AnimatePresence mode="wait">
         <motion.div
-          key={page}
+          key={page + (projectId || "")}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
@@ -4692,9 +4913,9 @@ export default function App() {
         <>
           <Hero />
           <StatsBar />
-          <ShowcaseGallery setPage={navigate} setExpandProject={setExpandProject} />
+          <ShowcaseGallery openProjectPage={openProjectPage} />
           <Services />
-          <WorkPreview setPage={navigate} openProject={openProject} />
+          <WorkPreview setPage={navigate} openProject={openProjectPage} />
           <About setPage={navigate} />
           <ProcessTimeline />
           <DesignROICalculator />
@@ -4702,7 +4923,9 @@ export default function App() {
           <Footer />
         </>
       ) : page === "portfolio" ? (
-        <PortfolioPage setPage={navigate} expandProject={expandProject} setExpandProject={setExpandProject} />
+        <PortfolioPage setPage={navigate} openProjectPage={openProjectPage} />
+      ) : page === "project" ? (
+        <ProjectPage projectId={projectId} setPage={navigate} />
       ) : page === "resume" ? (
         <ResumePage setPage={navigate} />
       ) : null}
