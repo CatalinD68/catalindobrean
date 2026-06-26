@@ -35,6 +35,14 @@ const WhatsAppIcon = ({ size = 20, color = "currentColor" }) => (
 // Falls back to a dark placeholder while loading
 function LazyImage({ src, alt = "", aspectRatio, style = {}, eager = false, className = "" }) {
   const [loaded, setLoaded] = useState(false);
+  const imgRef = useRef(null);
+
+  // Handle case where image is already cached (onLoad won't fire)
+  useEffect(() => {
+    if (imgRef.current && imgRef.current.complete && imgRef.current.naturalHeight > 0) {
+      setLoaded(true);
+    }
+  }, [src]);
 
   if (!src) {
     return (
@@ -61,12 +69,14 @@ function LazyImage({ src, alt = "", aspectRatio, style = {}, eager = false, clas
       }}
     >
       <img
+        ref={imgRef}
         src={src}
         alt={alt}
         loading={eager ? "eager" : "lazy"}
         decoding="async"
         fetchpriority={eager ? "high" : "auto"}
         onLoad={() => setLoaded(true)}
+        onError={() => setLoaded(true)}
         style={{
           width: "100%",
           height: "100%",
@@ -2781,21 +2791,21 @@ function DesignROICalculator() {
 
 // ─── Contact Slideshow Data ───
 const contactSlides = [
-  { id: 1, image: "/images/covers/wesupply.jpg", label: "WeSupply", tag: "SaaS" },
-  { id: 2, image: "/images/branding/forum01115/cover.png", label: "ForUM01115", tag: "Community" },
-  { id: 3, image: "/images/covers/urbanlab.jpg", label: "Urbanlab", tag: "Platform" },
-  { id: 4, image: "/images/branding/redbee/cover.jpg", label: "Redbee Software", tag: "Tech" },
-  { id: 5, image: "/images/showcase/7.jpg", label: "Tale Jewelry", tag: "Spatial" },
-  { id: 6, image: "/images/covers/geoint.jpg", label: "GeoInt", tag: "Dashboard" },
-  { id: 7, image: "/images/branding/zonametro/cover.jpg", label: "Zona Metropolitană", tag: "Public" },
-  { id: 8, image: "/images/covers/dreamtter.jpg", label: "Dreamtter", tag: "Mobile" },
-  { id: 9, image: "/images/branding/mindtune/cover.jpg", label: "MindTune", tag: "Consulting" },
-  { id: 10, image: "/images/showcase/8.jpg", label: "Visen", tag: "VR / AR" },
-  { id: 11, image: "/images/covers/refracto.jpg", label: "Refracto", tag: "SaaS" },
-  { id: 12, image: "/images/branding/turbo/cover.jpg", label: "Turbo Coffee", tag: "F&B" },
+  { id: 1, projectId: "wesupply", image: "/images/covers/wesupply.jpg", label: "WeSupply", tag: "SaaS" },
+  { id: 2, projectId: "forum01115", image: "/images/branding/forum01115/cover.png", label: "ForUM01115", tag: "Community" },
+  { id: 3, projectId: "urbanlab", image: "/images/covers/urbanlab.jpg", label: "Urbanlab", tag: "Platform" },
+  { id: 4, projectId: "redbee", image: "/images/branding/redbee/cover.jpg", label: "Redbee Software", tag: "Tech" },
+  { id: 5, projectId: "talejewelry", image: "/images/showcase/7.jpg", label: "Tale Jewelry", tag: "Spatial" },
+  { id: 6, projectId: "geoint", image: "/images/covers/geoint.jpg", label: "GeoInt", tag: "Dashboard" },
+  { id: 7, projectId: "zonametro", image: "/images/branding/zonametro/cover.jpg", label: "Zona Metropolitană", tag: "Public" },
+  { id: 8, projectId: "dreamtter", image: "/images/covers/dreamtter.jpg", label: "Dreamtter", tag: "Mobile" },
+  { id: 9, projectId: "mindtune", image: "/images/branding/mindtune/cover.jpg", label: "MindTune", tag: "Consulting" },
+  { id: 10, projectId: "visen", image: "/images/showcase/8.jpg", label: "Visen", tag: "VR / AR" },
+  { id: 11, projectId: "refracto", image: "/images/covers/refracto.jpg", label: "Refracto", tag: "SaaS" },
+  { id: 12, projectId: "turbo", image: "/images/branding/turbo/cover.jpg", label: "Turbo Coffee", tag: "F&B" },
 ];
 
-function Contact() {
+function Contact({ openProjectPage }) {
   const [ref, visible] = useInView(0.1);
   const mobile = useIsMobile();
   const doubled = [...contactSlides, ...contactSlides];
@@ -2829,7 +2839,12 @@ function Contact() {
             <div
               key={`${item.id}-${idx}`}
               className="hmarquee-card img-shield"
-              style={{ width: mobile ? 140 : 200 }}
+              onClick={() => {
+                if (item.projectId && openProjectPage) {
+                  openProjectPage(item.projectId);
+                }
+              }}
+              style={{ width: mobile ? 140 : 200, cursor: item.projectId ? "pointer" : "default" }}
             >
               <LazyImage
                 src={item.image}
@@ -3278,6 +3293,16 @@ function ProjectPage({ projectId, setPage }) {
   const mobile = useIsMobile();
   const all = [...portfolioProjects.product, ...portfolioProjects.branding, ...portfolioProjects.personal];
   const p = all.find(x => x.id === projectId);
+
+  // Force scroll to top on every project page load
+  useEffect(() => {
+    if (window.lenis && window.lenis.scrollTo) {
+      window.lenis.scrollTo(0, { immediate: true, force: true });
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [projectId]);
 
   if (!p) {
     return (
@@ -4863,19 +4888,39 @@ export default function App() {
     return () => { if (lenis) lenis.destroy(); if (rafId) cancelAnimationFrame(rafId); window.lenis = null; };
   }, []);
 
+  const scrollToTopReliable = () => {
+    // Use Lenis if available, otherwise native
+    if (window.lenis && window.lenis.scrollTo) {
+      window.lenis.scrollTo(0, { immediate: true, force: true });
+    }
+    // Multiple fallbacks for reliability across all browsers and edge cases
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    // Run again after React renders the new page
+    requestAnimationFrame(() => {
+      if (window.lenis && window.lenis.scrollTo) {
+        window.lenis.scrollTo(0, { immediate: true, force: true });
+      }
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    });
+  };
+
   const navigate = (p) => {
     const url = p === "home" ? "/" : `/${p}`;
     window.history.pushState({}, "", url);
     setPageState(p);
     setProjectId(null);
-    window.scrollTo(0, 0);
+    scrollToTopReliable();
   };
 
   const openProjectPage = (id) => {
     window.history.pushState({}, "", `/project/${id}`);
     setPageState("project");
     setProjectId(id);
-    window.scrollTo(0, 0);
+    scrollToTopReliable();
   };
 
   // Listen for browser back/forward
@@ -4884,7 +4929,7 @@ export default function App() {
       const next = getPageFromURL();
       setPageState(next.page);
       setProjectId(next.projectId);
-      window.scrollTo(0, 0);
+      scrollToTopReliable();
     };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
@@ -4919,7 +4964,7 @@ export default function App() {
           <About setPage={navigate} />
           <ProcessTimeline />
           <DesignROICalculator />
-          <Contact />
+          <Contact openProjectPage={openProjectPage} />
           <Footer />
         </>
       ) : page === "portfolio" ? (
