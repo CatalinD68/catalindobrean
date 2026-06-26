@@ -1,21 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://catalindobrean.design/</loc>
-    <lastmod>2026-03-17</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://catalindobrean.design/portfolio</loc>
-    <lastmod>2026-03-17</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://catalindobrean.design/resume</loc>
-    <lastmod>2026-03-17</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
+  <url><loc>https://catalindobrean.design/</loc><priority>1.0</priority></url>
+  <url><loc>https://catalindobrean.design/portfolio</loc><priority>0.9</priority></url>
+  <url><loc>https://catalindobrean.design/resume</loc><priority>0.8</priority></url>
+  <!-- Product Projects -->
+  <url><loc>https://catalindobrean.design/project/wesupply</loc><priority>0.7</priority></url>
+  <url><loc>https://catalindobrean.design/project/dreamtter</loc><priority>0.7</priority></url>
+  <url><loc>https://catalindobrean.design/project/urbanlab</loc><priority>0.7</priority></url>
+  <url><loc>https://catalindobrean.design/project/geoint</loc><priority>0.7</priority></url>
+  <url><loc>https://catalindobrean.design/project/refracto</loc><priority>0.7</priority></url>
+  <!-- Brand Projects -->
+  <url><loc>https://catalindobrean.design/project/forum01115</loc><priority>0.7</priority></url>
+  <url><loc>https://catalindobrean.design/project/redbee</loc><priority>0.7</priority></url>
+  <url><loc>https://catalindobrean.design/project/roboticsvalley</loc><priority>0.7</priority></url>
+  <url><loc>https://catalindobrean.design/project/turbo</loc><priority>0.7</priority></url>
+  <url><loc>https://catalindobrean.design/project/zonametro</loc><priority>0.7</priority></url>
+  <url><loc>https://catalindobrean.design/project/mindtune</loc><priority>0.7</priority></url>
+  <url><loc>https://catalindobrean.design/project/dopodoheal</loc><priority>0.7</priority></url>
+  <url><loc>https://catalindobrean.design/project/mirgeoenergy</loc><priority>0.7</priority></url>
+  <url><loc>https://catalindobrean.design/project/evointerior</loc><priority>0.7</priority></url>
+  <url><loc>https://catalindobrean.design/project/selfit</loc><priority>0.7</priority></url>
+  <url><loc>https://catalindobrean.design/project/brooklynzoo</loc><priority>0.7</priority></url>
+  <url><loc>https://catalindobrean.design/project/berarkelemen</loc><priority>0.7</priority></url>
+  <url><loc>https://catalindobrean.design/project/dentasuport</loc><priority>0.7</priority></url>
+  <url><loc>https://catalindobrean.design/project/clinicadezambete</loc><priority>0.7</priority></url>
+  <url><loc>https://catalindobrean.design/project/litoralulromanesc</loc><priority>0.7</priority></url>
+  <url><loc>https://catalindobrean.design/project/idpatrimoniu</loc><priority>0.7</priority></url>
+  <url><loc>https://catalindobrean.design/project/ecolab</loc><priority>0.7</priority></url>
+  <url><loc>https://catalindobrean.design/project/oriceinvitatie</loc><priority>0.7</priority></url>
+  <url><loc>https://catalindobrean.design/project/urbanlab-brand</loc><priority>0.7</priority></url>
+  <!-- Personal Projects -->
+  <url><loc>https://catalindobrean.design/project/talejewelry</loc><priority>0.7</priority></url>
+  <url><loc>https://catalindobrean.design/project/visen</loc><priority>0.7</priority></url>
 </urlset>
