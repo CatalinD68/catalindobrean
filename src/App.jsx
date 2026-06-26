@@ -30,54 +30,54 @@ const WhatsAppIcon = ({ size = 20, color = "currentColor" }) => (
   </svg>
 );
 
-// ─── Lazy Image — IntersectionObserver-based lazy loader ───
-// Renders a div with background-image only when scrolled near viewport
-// Use this for background-image styled containers (gives same visual result as <img loading="lazy">)
+// ─── Lazy Image — uses native browser lazy loading (most reliable) ───
+// Renders an <img> with loading="lazy" and object-fit: cover
+// Falls back to a dark placeholder while loading
 function LazyImage({ src, alt = "", aspectRatio, style = {}, eager = false, className = "" }) {
   const [loaded, setLoaded] = useState(false);
-  const [inView, setInView] = useState(eager);
-  const ref = useRef(null);
 
-  useEffect(() => {
-    if (eager || inView) return;
-    const node = ref.current;
-    if (!node) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setInView(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "300px" }  // start loading 300px before entering viewport
+  if (!src) {
+    return (
+      <div
+        className={className}
+        style={{
+          ...style,
+          aspectRatio: aspectRatio || style.aspectRatio,
+          background: "linear-gradient(135deg, #1A1A1A 0%, #0B0B0B 100%)",
+        }}
+      />
     );
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [eager, inView]);
-
-  useEffect(() => {
-    if (!inView || !src) return;
-    const img = new window.Image();
-    img.onload = () => setLoaded(true);
-    img.src = src;
-  }, [inView, src]);
+  }
 
   return (
     <div
-      ref={ref}
-      role={alt ? "img" : undefined}
-      aria-label={alt}
       className={className}
       style={{
         ...style,
         aspectRatio: aspectRatio || style.aspectRatio,
-        background: loaded && src
-          ? `url(${src}) center/cover no-repeat, #1A1A1A`
-          : "linear-gradient(135deg, #1A1A1A 0%, #0B0B0B 100%)",
-        transition: "opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
-        opacity: loaded || !src ? 1 : 0.6,
+        background: "linear-gradient(135deg, #1A1A1A 0%, #0B0B0B 100%)",
+        overflow: "hidden",
+        position: style.position || "relative",
       }}
-    />
+    >
+      <img
+        src={src}
+        alt={alt}
+        loading={eager ? "eager" : "lazy"}
+        decoding="async"
+        fetchpriority={eager ? "high" : "auto"}
+        onLoad={() => setLoaded(true)}
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          objectPosition: "center",
+          display: "block",
+          opacity: loaded ? 1 : 0,
+          transition: "opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
+        }}
+      />
+    </div>
   );
 }
 
@@ -1530,24 +1530,24 @@ function Hero() {
 // ─── Showcase Gallery ───
 const showcaseItems = [
   // Column 1 — Brand → Product → Brand
-  { id: 1, image: "/images/branding/forum01115/cover.png", label: "ForUM01115", tag: "Community", col: 0 },
-  { id: 2, image: "/images/covers/wesupply.jpg", label: "WeSupply", tag: "SaaS", col: 0 },
-  { id: 3, image: "/images/branding/redbee/cover.jpg", label: "Redbee Software", tag: "Tech", col: 0 },
+  { id: 1, projectId: "forum01115", image: "/images/branding/forum01115/cover.png", label: "ForUM01115", tag: "Community", col: 0 },
+  { id: 2, projectId: "wesupply", image: "/images/covers/wesupply.jpg", label: "WeSupply", tag: "SaaS", col: 0 },
+  { id: 3, projectId: "redbee", image: "/images/branding/redbee/cover.jpg", label: "Redbee Software", tag: "Tech", col: 0 },
   // Column 2 — Product → Brand → Product
-  { id: 4, image: "/images/covers/urbanlab.jpg", label: "Urbanlab", tag: "Platform", col: 1 },
-  { id: 5, image: "/images/branding/zonametro/cover.jpg", label: "Zona Metropolitană", tag: "Public", col: 1 },
-  { id: 6, image: "/images/covers/geoint.jpg", label: "GeoInt", tag: "Dashboard", col: 1 },
+  { id: 4, projectId: "urbanlab", image: "/images/covers/urbanlab.jpg", label: "Urbanlab", tag: "Platform", col: 1 },
+  { id: 5, projectId: "zonametro", image: "/images/branding/zonametro/cover.jpg", label: "Zona Metropolitană", tag: "Public", col: 1 },
+  { id: 6, projectId: "geoint", image: "/images/covers/geoint.jpg", label: "GeoInt", tag: "Dashboard", col: 1 },
   // Column 3 — Brand → Personal → Brand
-  { id: 7, image: "/images/branding/mindtune/cover.jpg", label: "MindTune", tag: "Consulting", col: 2 },
-  { id: 8, image: "/images/showcase/7.jpg", label: "Tale Jewelry", tag: "Spatial AR", col: 2 },
-  { id: 9, image: "/images/branding/roboticsvalley/cover.png", label: "Robotics Valley", tag: "Innovation", col: 2 },
+  { id: 7, projectId: "mindtune", image: "/images/branding/mindtune/cover.jpg", label: "MindTune", tag: "Consulting", col: 2 },
+  { id: 8, projectId: "talejewelry", image: "/images/showcase/7.jpg", label: "Tale Jewelry", tag: "Spatial AR", col: 2 },
+  { id: 9, projectId: "roboticsvalley", image: "/images/branding/roboticsvalley/cover.png", label: "Robotics Valley", tag: "Innovation", col: 2 },
   // Column 4 — Product → Brand → Product
-  { id: 10, image: "/images/covers/dreamtter.jpg", label: "Dreamtter", tag: "Mobile App", col: 3 },
-  { id: 11, image: "/images/branding/turbo/cover.jpg", label: "Turbo Coffee", tag: "F&B", col: 3 },
-  { id: 12, image: "/images/covers/refracto.jpg", label: "Refracto", tag: "SaaS", col: 3 },
+  { id: 10, projectId: "dreamtter", image: "/images/covers/dreamtter.jpg", label: "Dreamtter", tag: "Mobile App", col: 3 },
+  { id: 11, projectId: "turbo", image: "/images/branding/turbo/cover.jpg", label: "Turbo Coffee", tag: "F&B", col: 3 },
+  { id: 12, projectId: "refracto", image: "/images/covers/refracto.jpg", label: "Refracto", tag: "SaaS", col: 3 },
 ];
 
-function ShowcaseGallery() {
+function ShowcaseGallery({ setPage, setExpandProject }) {
   const mobile = useIsMobile();
   const colCount = mobile ? 2 : 4;
   const containerRef = useRef(null);
@@ -1647,6 +1647,13 @@ function ShowcaseGallery() {
                     <div
                       key={`${item.id}-${colIdx}-${idx}`}
                       className="showcase-card img-shield"
+                      onClick={() => {
+                        if (item.projectId && setExpandProject && setPage) {
+                          setExpandProject(item.projectId);
+                          setPage("portfolio");
+                        }
+                      }}
+                      style={{ cursor: item.projectId ? "pointer" : "default" }}
                     >
                       {/* Image — lazy loaded */}
                       <LazyImage
@@ -3303,52 +3310,45 @@ function ProjectModal({ project, onClose, mobile }) {
   const p = project;
   const isPersonal = p.gridImages !== undefined;
   const displayImages = isPersonal ? p.gridImages : (p.images || []);
-  const scrollContainerRef = useRef(null);
 
   useEffect(() => {
     const handleKey = (e) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", handleKey);
-    // Reset scroll position to top when opening
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTop = 0;
-    }
     return () => window.removeEventListener("keydown", handleKey);
-  }, [onClose, project]);
+  }, [onClose]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.4 }}
-      style={{
-        position: "fixed", inset: 0, zIndex: 9999,
-        background: "rgba(11,11,11,0.85)",
-        backdropFilter: "blur(20px) saturate(180%)",
-        WebkitBackdropFilter: "blur(20px) saturate(180%)",
-      }}
-    >
-      {/* Click-outside backdrop layer (separate from scroll container) */}
-      <div
+    <>
+      {/* Backdrop layer — fixed, blurred, animates opacity */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
         onClick={onClose}
-        style={{ position: "absolute", inset: 0, cursor: "pointer" }}
+        style={{
+          position: "fixed", inset: 0, zIndex: 9998,
+          background: "rgba(11,11,11,0.92)",
+          backdropFilter: "blur(20px) saturate(180%)",
+          WebkitBackdropFilter: "blur(20px) saturate(180%)",
+          cursor: "pointer",
+        }}
       />
 
+      {/* Scrollable modal — pure native scroll, NO transforms during scroll */}
       <motion.div
-        ref={scrollContainerRef}
-        initial={{ scale: 0.92, opacity: 0, filter: "blur(20px)" }}
-        animate={{ scale: 1, opacity: 1, filter: "blur(0px)" }}
-        exit={{ scale: 0.96, opacity: 0, filter: "blur(20px)" }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 20 }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
         onClick={e => e.stopPropagation()}
         style={{
-          position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+          position: "fixed", inset: 0, zIndex: 9999,
           background: DARK,
-          overflowY: "scroll",
+          overflowY: "auto",
           overflowX: "hidden",
           WebkitOverflowScrolling: "touch",
           overscrollBehavior: "contain",
-          touchAction: "pan-y",
         }}
       >
         {/* Close button — sticky to viewport */}
@@ -3367,20 +3367,15 @@ function ProjectModal({ project, onClose, mobile }) {
             transition: "all 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
             boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
           }}
-          onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.95)"; e.currentTarget.style.transform = "scale(1.08)"; e.currentTarget.querySelector("svg").setAttribute("color", DARK); }}
-          onMouseLeave={e => { e.currentTarget.style.background = "rgba(11,11,11,0.7)"; e.currentTarget.style.transform = "none"; e.currentTarget.querySelector("svg").setAttribute("color", WHITE); }}
+          onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.95)"; e.currentTarget.style.transform = "scale(1.08)"; const svg = e.currentTarget.querySelector("svg"); if (svg) svg.style.color = DARK; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "rgba(11,11,11,0.7)"; e.currentTarget.style.transform = "none"; const svg = e.currentTarget.querySelector("svg"); if (svg) svg.style.color = WHITE; }}
         >
-          <X size={20} color={WHITE} />
+          <X size={20} style={{ color: WHITE }} />
         </button>
 
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: mobile ? "80px 20px 80px" : "100px 40px 100px" }}>
           {/* Hero */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            style={{ marginBottom: mobile ? 32 : 48 }}
-          >
+          <div style={{ marginBottom: mobile ? 32 : 48 }}>
             <span style={{
               display: "inline-block",
               fontSize: 10, fontWeight: 700, color: BLUE, fontFamily: "var(--font-mono)",
@@ -3399,20 +3394,16 @@ function ProjectModal({ project, onClose, mobile }) {
             <p style={{ fontSize: mobile ? 14 : 16, color: GRAY, fontFamily: "var(--font-mono)" }}>
               {p.role}{p.location ? ` · ${p.location}` : ""}
             </p>
-          </motion.div>
+          </div>
 
           {/* Cover image - eager (above fold) */}
           {p.image && (
-            <motion.img
+            <img
               src={p.image}
               alt={p.title}
               loading="eager"
               fetchpriority="high"
               decoding="async"
-              initial={{ opacity: 0, filter: "blur(8px)", scale: 1.02 }}
-              animate={{ opacity: 1, filter: "blur(0px)", scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="img-shield"
               style={{
                 width: "100%", aspectRatio: "16/9", objectFit: "cover",
                 marginBottom: mobile ? 32 : 56,
@@ -3424,35 +3415,25 @@ function ProjectModal({ project, onClose, mobile }) {
           )}
 
           {p.noExpand ? (
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.5 }}
-              style={{
-                fontSize: 14, color: GRAY, fontStyle: "italic",
-                textAlign: "center", padding: "40px 20px",
-                background: "rgba(255,255,255,0.02)",
-                border: "1px solid rgba(255,255,255,0.06)",
-                borderRadius: 12,
-              }}
-            >
+            <p style={{
+              fontSize: 14, color: GRAY, fontStyle: "italic",
+              textAlign: "center", padding: "40px 20px",
+              background: "rgba(255,255,255,0.02)",
+              border: "1px solid rgba(255,255,255,0.06)",
+              borderRadius: 12,
+            }}>
               More details cannot be displayed due to NDA.
-            </motion.p>
+            </p>
           ) : (
             <>
               {/* Context / Problem / Solution */}
               {p.context && (
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.7, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: mobile ? "1fr" : "repeat(3, 1fr)",
-                    gap: mobile ? 24 : 32,
-                    marginBottom: mobile ? 40 : 64,
-                  }}
-                >
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: mobile ? "1fr" : "repeat(3, 1fr)",
+                  gap: mobile ? 24 : 32,
+                  marginBottom: mobile ? 40 : 64,
+                }}>
                   {[
                     { label: "Context", content: p.context },
                     { label: "Problem", content: p.problem },
@@ -3471,17 +3452,12 @@ function ProjectModal({ project, onClose, mobile }) {
                       </p>
                     </div>
                   ))}
-                </motion.div>
+                </div>
               )}
 
               {/* Approach */}
               {p.approach && (
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.7, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                  style={{ marginBottom: mobile ? 40 : 64 }}
-                >
+                <div style={{ marginBottom: mobile ? 40 : 64 }}>
                   <div style={{
                     fontSize: 11, fontWeight: 700, color: BLUE,
                     fontFamily: "var(--font-mono)", letterSpacing: "0.1em",
@@ -3509,16 +3485,12 @@ function ProjectModal({ project, onClose, mobile }) {
                       </div>
                     ))}
                   </div>
-                </motion.div>
+                </div>
               )}
 
               {/* Gallery - LAZY LOADED */}
               {displayImages && displayImages.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.6, delay: 0.6 }}
-                >
+                <div>
                   <div style={{
                     fontSize: 11, fontWeight: 700, color: BLUE,
                     fontFamily: "var(--font-mono)", letterSpacing: "0.1em",
@@ -3532,17 +3504,12 @@ function ProjectModal({ project, onClose, mobile }) {
                     gap: mobile ? 12 : 20,
                   }}>
                     {displayImages.map((img, i) => (
-                      <motion.img
+                      <img
                         key={i}
                         src={img}
                         alt={`${p.title} — image ${i + 1}`}
                         loading="lazy"
                         decoding="async"
-                        initial={{ opacity: 0, filter: "blur(8px)", y: 20 }}
-                        whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                        viewport={{ once: true, margin: "-40px" }}
-                        transition={{ duration: 0.7, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
-                        className="img-shield"
                         style={{
                           width: "100%",
                           aspectRatio: isPersonal ? "3/4" : "16/9",
@@ -3554,13 +3521,13 @@ function ProjectModal({ project, onClose, mobile }) {
                       />
                     ))}
                   </div>
-                </motion.div>
+                </div>
               )}
             </>
           )}
         </div>
       </motion.div>
-    </motion.div>
+    </>
   );
 }
 
@@ -4725,7 +4692,7 @@ export default function App() {
         <>
           <Hero />
           <StatsBar />
-          <ShowcaseGallery />
+          <ShowcaseGallery setPage={navigate} setExpandProject={setExpandProject} />
           <Services />
           <WorkPreview setPage={navigate} openProject={openProject} />
           <About setPage={navigate} />
