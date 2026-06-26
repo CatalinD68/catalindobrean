@@ -1549,7 +1549,7 @@ const showcaseItems = [
   { id: 6, projectId: "geoint", image: "/images/covers/geoint.jpg", label: "GeoInt", tag: "Dashboard", col: 1 },
   // Column 3 — Brand → Personal → Brand
   { id: 7, projectId: "mindtune", image: "/images/branding/mindtune/cover.jpg", label: "MindTune", tag: "Consulting", col: 2 },
-  { id: 8, projectId: "talejewelry", image: "/images/showcase/7.jpg", label: "Tale Jewelry", tag: "Spatial AR", col: 2 },
+  { id: 8, projectId: "visen", image: "/images/showcase/7.jpg", label: "Visen", tag: "VR / AR", col: 2 },
   { id: 9, projectId: "roboticsvalley", image: "/images/branding/roboticsvalley/cover.png", label: "Robotics Valley", tag: "Innovation", col: 2 },
   // Column 4 — Product → Brand → Product
   { id: 10, projectId: "dreamtter", image: "/images/covers/dreamtter.jpg", label: "Dreamtter", tag: "Mobile App", col: 3 },
